@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laporan Sistem & Diagram UML — BookBase Digital Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              50: '#eef2ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              800: '#0f2557',
+              900: '#071330',
+              950: '#040b1d',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+      fontFamily: 'Plus Jakarta Sans, sans-serif',
+    });
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 1rem 0;
+    }
+    @media print {
+      body * {
+        visibility: visible !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- TOP NAVBAR -->
+  <header class="sticky top-0 z-30 bg-navy-900 text-white shadow-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition flex items-center gap-1.5">
+          <span>← Kembali ke Web BookBase</span>
+        </a>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold">Laporan Aktivitas Web & Diagram UML</h1>
+          <p class="text-[11px] text-blue-300">Use Case • Activity • Sequence • Class • ERD • State • Sitemap</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          onclick="window.print()"
+          class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow transition"
+        >
+          🖨️ Cetak / Simpan PDF Laporan
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KONTEN LAPORAN & DIAGRAM -->
+  <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+    <!-- COVER LAPORAN -->
+    <section class="hero-navy-gradient rounded-3xl p-8 sm:p-10 text-white shadow-xl">
+      <span class="px-3 py-1 rounded-full bg-white/10 text-blue-200 text-xs font-bold border border-white/15">
+        Dokumentasi Rekayasa Perangkat Lunak
+      </span>
+      <h2 class="text-2xl sm:text-4xl font-extrabold mt-3 leading-tight">
+        Laporan Sistem & Pemodelan UML Aktivitas Web Perpustakaan Digital "BookBase"
+      </h2>
+      <p class="text-sm text-slate-300 mt-2 max-w-3xl leading-relaxed">
+        Dokumen ini memuat spesifikasi arsitektur, alur aktivitas antarmuka web (Beranda, Katalog, E-Reader 70 Halaman, Login/Registrasi/Lupa Password, Peminjaman, Pengembalian, Denda Otomatis, CRUD Admin, dan Ekspor Laporan PDF/Excel), serta diagram UML lengkap yang terhubung dengan database MySQL (<code class="text-blue-300">db_perpustakaan</code>).
+      </p>
+
+      <!-- Navigasi Cepat Antar Diagram -->
+      <div class="flex flex-wrap gap-2 mt-6 pt-6 border-t border-white/15 no-print">
+        <a href="#sec-usecase" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition">1. Use Case Diagram</a>
+        <a href="#sec-activity" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition">2. Activity Diagram (6 Alur)</a>
+        <a href="#sec-sequence" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition">3. Sequence Diagram (4 Alur)</a>
+        <a href="#sec-class" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition">4. Class Diagram</a>
+        <a href="#sec-erd" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition">5. ERD Database (10 Tabel)</a>
+        <a href="#sec-state" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-blue-600 text-xs font-bold transition">6. State & Sitemap</a>
+      </div>
+    </section>
+
+    <!-- 1. USE CASE DIAGRAM -->
+    <section id="sec-usecase" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Bagian 1</span>
+        <h3 class="text-xl font-extrabold text-navy-900">Use Case Diagram — Seluruh Aktivitas Pengguna di Web</h3>
+        <p class="text-xs text-slate-500">Pemetaan hak akses dan aktivitas antara Pengunjung, Anggota, dan Administrator di antarmuka web BookBase.</p>
+      </div>
+      <div class="mermaid">
+flowchart LR
+    G(["👤 Pengunjung / Tamu"])
+    M(["👤 Anggota"])
+    A(["🛡️ Administrator"])
+
+    subgraph BookBase["Sistem Informasi Perpustakaan Web BookBase"]
+        UC1(("Lihat Beranda & Statistik"))
+        UC2(("Cari & Filter Katalog Buku"))
+        UC3(("Lihat Detail Buku & Panel Kanan"))
+        UC4(("Baca Buku Online 70 Halaman"))
+        UC5(("Registrasi Anggota Baru"))
+        UC6(("Login & Lupa Password"))
+        UC7(("Ajukan Peminjaman Buku"))
+        UC8(("Lihat Riwayat & Denda Saya"))
+        UC9(("Lihat Dashboard & Grafik"))
+        UC10(("CRUD Buku + Upload Cover"))
+        UC11(("CRUD Data Anggota"))
+        UC12(("Setujui / Tolak Peminjaman"))
+        UC13(("Proses Pengembalian & Denda"))
+        UC14(("Cetak & Ekspor Laporan PDF/Excel"))
+    end
+
+    G --- UC1 & UC2 & UC3 & UC4 & UC5 & UC6
+    M --- UC1 & UC2 & UC4 & UC6 & UC7 & UC8
+    A --- UC6 & UC9 & UC10 & UC11 & UC12 & UC13 & UC14
+      </div>
+    </section>
+
+    <!-- 2. ACTIVITY DIAGRAM -->
+    <section id="sec-activity" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-8">
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Bagian 2</span>
+        <h3 class="text-xl font-extrabold text-navy-900">Activity Diagram — Alur Aktivitas di Antarmuka Web</h3>
+        <p class="text-xs text-slate-500">Menggambarkan urutan aktivitas pengguna dari klik di layar hingga validasi dan penyimpanan di MySQL.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Activity 1: Login & Registrasi -->
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <h4 class="font-extrabold text-sm text-navy-900 mb-2">2.1 Activity Diagram: Login, Registrasi & Redirect Role (`login.html`)</h4>
+          <div class="mermaid">
+flowchart TD
+    S((Mulai)) --> A["Buka login.html"]
+    A --> B{"Pilih Tab"}
+    B -- "Login" --> C["Isi Email & Password"]
+    B -- "Registrasi" --> D["Isi Biodata & NIS/NIM"]
+    D --> E["INSERT users & anggota"] --> H
+    C --> F{"Verifikasi scrypt di MySQL"}
+    F -- "Gagal" --> G["Tampilkan Alert Error"] --> C
+    F -- "Valid" --> H["Buat Cookie Sesi HMAC + Catat Aktivitas"]
+    H --> I{"Cek Role"}
+    I -- "admin" --> J["Redirect ke #admin-dashboard"]
+    I -- "anggota" --> K["Redirect ke #beranda"]
+    J & K --> X((Selesai))
+          </div>
+        </div>
+
+        <!-- Activity 2: E-Reader 70 Halaman -->
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <h4 class="font-extrabold text-sm text-navy-900 mb-2">2.2 Activity Diagram: Membaca Buku 70 Halaman di E-Reader (`baca.html`)</h4>
+          <div class="mermaid">
+flowchart TD
+    S((Mulai)) --> A["Klik tombol 📖 Baca pada Buku"]
+    A --> B["Buka baca.html?id={id_buku}"]
+    B --> C["GET /api/books/:id/chapters dari tabel bab_buku"]
+    C --> D["Pecah 10 Bab menjadi 70 Halaman Bacaan"]
+    D --> E{"Pilih Mode Baca"}
+    E -- "Per Halaman" --> F["Tampilkan Hlm 1..70 + Barisan Nomor Halaman"]
+    E -- "Per Bab" --> G["Tampilkan Bab 1..10 Utuh"]
+    E -- "Full 1 Buku" --> H["Tampilkan Seluruh 10 Bab Sekaligus"]
+    F & G & H --> I["Atur Warna Kertas / Ukuran Huruf / Simpan Progres"]
+    I --> X((Selesai))
+          </div>
+        </div>
+
+        <!-- Activity 3: Peminjaman & Persetujuan -->
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <h4 class="font-extrabold text-sm text-navy-900 mb-2">2.3 Activity Diagram: Pengajuan & Persetujuan Peminjaman Buku</h4>
+          <div class="mermaid">
+flowchart TD
+    S((Mulai)) --> A["Anggota klik Pinjam & pilih durasi"]
+    A --> B{"Stok > 0 & Tidak Duplikat?"}
+    B -- "Tidak" --> C["Tolak & Tampilkan Toast Error"] --> X((Selesai))
+    B -- "Ya" --> D["INSERT peminjaman (Status: Menunggu)"]
+    D --> E["Admin buka menu Sirkulasi"]
+    E --> F{"Keputusan Admin"}
+    F -- "Tolak" --> G["UPDATE status = Ditolak"] --> X
+    F -- "Setujui" --> H["UPDATE status = Dipinjam<br/>UPDATE buku SET jumlah_stok = jumlah_stok - 1"]
+    H --> X
+          </div>
+        </div>
+
+        <!-- Activity 4: Pengembalian & Denda Otomatis -->
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <h4 class="font-extrabold text-sm text-navy-900 mb-2">2.4 Activity Diagram: Pengembalian Buku & Hitung Denda Otomatis</h4>
+          <div class="mermaid">
+flowchart TD
+    S((Mulai)) --> A["Admin klik Proses Kembali"]
+    A --> B["Pilih Tanggal Kembali & Kondisi Buku"]
+    B --> C["Hitung hari_terlambat = tgl_kembali - batas_kembali"]
+    C --> D["UPDATE status = Dikembalikan<br/>UPDATE buku SET jumlah_stok = jumlah_stok + 1<br/>INSERT tabel pengembalian"]
+    D --> E{"hari_terlambat > 0?"}
+    E -- "Tidak" --> F["Denda Rp 0"] --> X((Selesai))
+    E -- "Ya" --> G["total_denda = hari x Rp 2.000<br/>INSERT ke tabel denda"] --> X
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SEQUENCE DIAGRAM -->
+    <section id="sec-sequence" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Bagian 3</span>
+        <h3 class="text-xl font-extrabold text-navy-900">Sequence Diagram — Interaksi Browser, Express API, & MySQL</h3>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+        <h4 class="font-extrabold text-sm text-navy-900 mb-2">3.1 Sequence Diagram: Alur Lengkap Peminjaman, Persetujuan, Pengembalian & Denda</h4>
+        <div class="mermaid">
+sequenceDiagram
+    actor M as Anggota
+    actor A as Admin
+    participant UI as Browser (app.js)
+    participant API as Express Server
+    participant DB as MySQL (db_perpustakaan)
+
+    M->>UI: Klik "Ajukan Peminjaman"
+    UI->>API: POST /api/loans (X-CSRF-Token)
+    API->>DB: INSERT peminjaman (Menunggu) + detail_peminjaman
+    DB-->>API: kode_peminjaman TRX-2026-XXXX
+    API-->>UI: 201 Created
+
+    A->>UI: Klik "Setujui" di Tabel Sirkulasi
+    UI->>API: POST /api/loans/:id/approve
+    API->>DB: UPDATE peminjaman (Dipinjam) & UPDATE buku (jumlah_stok - 1)
+    API-->>UI: 200 OK (Stok otomatis berkurang)
+
+    A->>UI: Klik "Proses Kembali"
+    UI->>API: POST /api/loans/:id/return
+    API->>DB: UPDATE peminjaman (Dikembalikan) & UPDATE buku (jumlah_stok + 1)
+    API->>DB: INSERT pengembalian & INSERT denda (jika terlambat)
+    API-->>UI: 200 OK { terlambat_hari, total_denda }
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CLASS DIAGRAM -->
+    <section id="sec-class" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Bagian 4</span>
+        <h3 class="text-xl font-extrabold text-navy-900">Class Diagram — Struktur Entitas & Modul Sistem</h3>
+      </div>
+      <div class="mermaid">
+classDiagram
+    class User {
+        +int id_user
+        +string nama
+        +string email
+        +string password_hash
+        +enum role
+        +login()
+        +logout()
+    }
+    class Anggota {
+        +int id_anggota
+        +string kode_anggota
+        +string nama_lengkap
+        +string nis_nim
+        +string no_telepon
+        +string alamat
+    }
+    class Kategori {
+        +int id_kategori
+        +string nama_kategori
+        +string slug
+    }
+    class Buku {
+        +int id_buku
+        +string kode_buku
+        +string isbn
+        +string judul_buku
+        +string penulis
+        +int jumlah_stok
+        +kurangiStok()
+        +tambahStok()
+    }
+    class BabBuku {
+        +int id_bab
+        +int id_buku
+        +int nomor_bab
+        +string judul_bab
+        +text isi_bab
+    }
+    class Peminjaman {
+        +int id_peminjaman
+        +string kode_peminjaman
+        +date tanggal_pinjam
+        +date batas_pengembalian
+        +enum status
+        +setujui()
+        +tolak()
+    }
+    class Pengembalian {
+        +int id_pengembalian
+        +date tanggal_kembali
+        +int terlambat_hari
+    }
+    class Denda {
+        +int id_denda
+        +int jumlah_hari
+        +int total_denda
+        +enum status_bayar
+        +lunasi()
+    }
+
+    User "1" -- "0..1" Anggota
+    Kategori "1" -- "0..*" Buku
+    Buku "1" -- "1..*" BabBuku
+    Anggota "1" -- "0..*" Peminjaman
+    Buku "1" -- "0..*" Peminjaman
+    Peminjaman "1" -- "0..1" Pengembalian
+    Pengembalian "1" -- "0..1" Denda
+      </div>
+    </section>
+
+    <!-- 5. ERD DATABASE -->
+    <section id="sec-erd" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Bagian 5</span>
+        <h3 class="text-xl font-extrabold text-navy-900">Entity Relationship Diagram (ERD 10 Tabel MySQL `db_perpustakaan`)</h3>
+      </div>
+      <div class="mermaid">
+erDiagram
+    USERS ||--o| ANGGOTA : "id_user"
+    USERS ||--o{ AKTIVITAS : "id_user"
+    KATEGORI ||--o{ BUKU : "id_kategori"
+    BUKU ||--o{ BAB_BUKU : "id_buku"
+    BUKU ||--o{ DETAIL_PEMINJAMAN : "id_buku"
+    ANGGOTA ||--o{ PEMINJAMAN : "id_anggota"
+    PEMINJAMAN ||--|{ DETAIL_PEMINJAMAN : "id_peminjaman"
+    PEMINJAMAN ||--o| PENGEMBALIAN : "id_peminjaman"
+    PENGEMBALIAN ||--o| DENDA : "id_pengembalian"
+      </div>
+    </section>
+
+    <!-- 6. STATE DIAGRAM & SITEMAP -->
+    <section id="sec-state" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600">Bagian 6</span>
+        <h3 class="text-xl font-extrabold text-navy-900">State Diagram Status Transaksi & Peta Navigasi Web</h3>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <h4 class="font-extrabold text-sm text-navy-900 mb-2">6.1 State Diagram Siklus Status Transaksi Peminjaman</h4>
+          <div class="mermaid">
+stateDiagram-v2
+    [*] --> Menunggu : Anggota Ajukan Pinjam
+    Menunggu --> Dipinjam : Admin Setujui (Stok - 1)
+    Menunggu --> Ditolak : Admin Tolak
+    Dipinjam --> Terlambat : Lewat Batas Kembali
+    Dipinjam --> Dikembalikan : Kembali Tepat Waktu (Stok + 1)
+    Terlambat --> Dikembalikan : Kembali + Hitung Denda (Stok + 1)
+    Ditolak --> [*]
+    Dikembalikan --> [*]
+          </div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <h4 class="font-extrabold text-sm text-navy-900 mb-2">6.2 Peta Navigasi Halaman Web (Sitemap)</h4>
+          <div class="mermaid">
+flowchart TD
+    Root["http://localhost:3000"] --> H1["index.html (Workspace Utama)"]
+    Root --> H2["login.html (Login, Registrasi, Reset)"]
+    Root --> H3["baca.html?id=N (E-Reader 70 Halaman)"]
+    Root --> H4["laporan.html (Visualisasi UML)"]
+    H1 --> P1["Publik: #beranda | #katalog | #tentang"]
+    H1 --> P2["Anggota: #riwayat-anggota"]
+    H1 --> P3["Admin: #admin-dashboard | #admin-buku | #admin-anggota | #admin-transaksi | #admin-laporan"]
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="py-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white mt-auto no-print">
+    <p>© 2026 BookBase Digital Library — Dokumentasi Aktivitas Web & Diagram UML</p>
+  </footer>
+</body>
+</html>
