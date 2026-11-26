@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookBase — Sistem Informasi Perpustakaan Digital</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#16367d',
+              800: '#0f2557',
+              900: '#071330',
+              950: '#040b1d',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <!-- Chart.js, jsPDF + AutoTable, SheetJS (XLSX) untuk Grafik & Ekspor Laporan PDF/Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="min-h-screen flex flex-col text-slate-800 antialiased">
+
+  <!-- ====================================================================
+       TOP NAVBAR UTAMA (Beranda, Katalog Buku, Tentang, Login / Dashboard)
+       ==================================================================== -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Logo & Nama Perpustakaan -->
+      <div class="flex items-center gap-3">
+        <button id="btn-mobile-sidebar" class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100" title="Buka Menu">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <a href="#beranda" data-nav="beranda" class="flex items-center gap-2.5 group">
+          <div class="w-10 h-10 rounded-xl bg-navy-900 flex items-center justify-center text-white shadow-md group-hover:bg-blue-600 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div>
+            <span class="text-lg font-extrabold tracking-tight text-navy-900">Book<span class="text-blue-600">Base</span></span>
+            <span class="hidden sm:block text-[11px] font-medium text-slate-500 -mt-1">Perpustakaan Digital Terpadu</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Kolom Pencarian Cepat di Header (Gaya BookBase) -->
+      <div class="hidden md:flex flex-1 max-w-md mx-4">
+        <div class="relative w-full">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+          </svg>
+          <input
+            id="global-search-input"
+            type="search"
+            placeholder="Cari judul buku, penulis, atau ISBN..."
+            class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 hover:bg-slate-200/70 focus:bg-white rounded-xl border border-transparent focus:border-blue-500 focus:outline-none transition"
+          />
+        </div>
+      </div>
+
+      <!-- Menu Navigasi Utama -->
+      <nav class="flex items-center gap-1 sm:gap-2">
+        <button data-nav="beranda" class="top-nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-blue-600 bg-blue-50 transition">
+          Beranda
+        </button>
+        <button data-nav="katalog" class="top-nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-navy-900 hover:bg-slate-100 transition">
+          Katalog Buku
+        </button>
+        <button data-nav="tentang" class="top-nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-navy-900 hover:bg-slate-100 transition">
+          Tentang
+        </button>
+
+        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+        <!-- Status Database Live Badge -->
+        <div id="db-live-badge" class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold" title="Terhubung langsung ke MySQL db_perpustakaan">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>MySQL Live</span>
+        </div>
+
+        <!-- Tombol Login (Saat belum login) -> Membuka halaman login.html tersendiri -->
+        <a
+          id="nav-btn-login"
+          href="login.html"
+          class="px-4 py-2 rounded-xl text-sm font-bold bg-navy-900 text-white hover:bg-blue-600 shadow-sm transition flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+          <span>Login</span>
+        </a>
+
+        <!-- Profil User (Saat sudah login) -->
+        <div id="nav-user-menu" class="hidden items-center gap-2.5">
+          <button
+            id="btn-user-dashboard"
+            class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 border border-slate-200/80 transition"
+          >
+            <div id="user-avatar-initials" class="w-8 h-8 rounded-lg bg-navy-900 text-white text-xs font-bold flex items-center justify-center">
+              AD
+            </div>
+            <div class="text-left hidden sm:block">
+              <p id="user-display-name" class="text-xs font-bold text-slate-900 leading-tight">Admin</p>
+              <p id="user-display-role" class="text-[10px] font-semibold uppercase tracking-wider text-blue-600">ADMIN</p>
+            </div>
+          </button>
+          <button
+            id="btn-top-logout"
+            class="p-2 rounded-xl text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition"
+            title="Logout / Keluar"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       WORKSPACE UTAMA: 3-COLUMN BOOKBASE LAYOUT
+       (Sidebar Kiri + Konten Tengah + Panel Detail Buku Navy Kanan)
+       ==================================================================== -->
+  <div class="flex-1 max-w-[1600px] w-full mx-auto flex relative">
+
+    <!-- 1. SIDEBAR KIRI (BookBase Navigation & Role-Based Menu) -->
+    <aside
+      id="app-sidebar"
+      class="fixed lg:sticky top-16 left-0 z-20 h-[calc(100vh-4rem)] w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between p-4 transition-transform duration-300 -translate-x-full lg:translate-x-0 overflow-y-auto"
+    >
+      <div class="space-y-6">
+        <!-- Menu Eksplorasi Publik & Anggota -->
+        <div>
+          <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Menu Utama</p>
+          <ul class="space-y-1">
+            <li>
+              <button data-nav="beranda" class="sidebar-link active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                </span>
+                <span>Beranda (Discover)</span>
+              </button>
+            </li>
+            <li>
+              <button data-nav="katalog" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </span>
+                <span>Katalog Buku</span>
+              </button>
+            </li>
+            <li id="menu-item-riwayat" class="hidden">
+              <button data-nav="riwayat-anggota" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </span>
+                <span>Peminjaman Saya</span>
+              </button>
+            </li>
+            <li>
+              <button data-nav="tentang" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                <span>Tentang Perpustakaan</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Menu Khusus Administrator (Hanya tampil saat login sebagai Admin) -->
+        <div id="sidebar-admin-group" class="hidden pt-4 border-t border-slate-200">
+          <div class="px-3 flex items-center justify-between mb-2">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Panel Administrator</p>
+            <span class="px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 rounded">ADMIN</span>
+          </div>
+          <ul class="space-y-1">
+            <li>
+              <button data-nav="admin-dashboard" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </span>
+                <span>Dashboard & Grafik</span>
+              </button>
+            </li>
+            <li>
+              <button data-nav="admin-buku" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </span>
+                <span>Manajemen Buku</span>
+              </button>
+            </li>
+            <li>
+              <button data-nav="admin-anggota" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </span>
+                <span>Manajemen Anggota</span>
+              </button>
+            </li>
+            <li>
+              <button data-nav="admin-transaksi" class="sidebar-link w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <div class="flex items-center gap-3">
+                  <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </span>
+                  <span>Sirkulasi & Denda</span>
+                </div>
+                <span id="badge-pending-loans" class="hidden px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">0</span>
+              </button>
+            </li>
+            <li>
+              <button data-nav="admin-laporan" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50">
+                <span class="sidebar-icon w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </span>
+                <span>Laporan (PDF / Excel)</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Kartu Ringkas Koleksi & Tombol Akun di Bawah Sidebar -->
+      <div class="space-y-3 pt-4 border-t border-slate-200">
+        <div class="p-3.5 rounded-2xl bg-navy-900 text-white">
+          <div class="flex items-center justify-between text-xs text-slate-300 mb-1">
+            <span>Total Koleksi Buku</span>
+            <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold text-[10px]">MySQL</span>
+          </div>
+          <p id="sidebar-total-books" class="text-2xl font-extrabold">12 Judul</p>
+          <p id="sidebar-available-stock" class="text-xs text-slate-300 mt-0.5">77 Eksemplar Tersedia</p>
+        </div>
+
+        <a
+          id="sidebar-btn-login"
+          href="login.html"
+          class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition"
+        >
+          <span>Masuk / Daftar Anggota</span>
+        </a>
+
+        <button
+          id="sidebar-btn-logout"
+          class="hidden w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- 2. KONTEN UTAMA TENGAH -->
+    <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 space-y-8">
+
+      <!-- ==================================================================
+           VIEW 1: BERANDA (Discover, Banner, Statistik Koleksi, Buku Terbaru & Populer)
+           ================================================================== -->
+      <section id="view-beranda" class="view-section space-y-8">
+        <!-- Banner Perpustakaan Modern Navy -->
+        <div class="hero-navy-gradient rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+          <div class="relative z-10 max-w-2xl space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur text-xs font-semibold text-blue-200 border border-white/15">
+              <span>Sistem Informasi Perpustakaan Digital Terintegrasi MySQL</span>
+            </div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+              Jelajahi Pengetahuan Dunia Lewat Koleksi <span class="text-blue-400">BookBase</span>
+            </h1>
+            <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+              Cari ribuan referensi akademik, sastra, teknologi, dan pengembangan diri. Ajukan peminjaman secara daring dan pantau status sirkulasi secara real-time.
+            </p>
+
+            <!-- Kolom Pencarian Buku di Banner Beranda -->
+            <form id="hero-search-form" class="pt-2 flex flex-col sm:flex-row gap-2.5 max-w-xl">
+              <div class="relative flex-1">
+                <svg class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                </svg>
+                <input
+                  id="hero-search-input"
+                  type="text"
+                  placeholder="Ketik judul buku, penulis, atau ISBN..."
+                  class="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white text-slate-900 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/40"
+                />
+              </div>
+              <button
+                type="submit"
+                class="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition"
+              >
+                Cari Buku
+              </button>
+            </form>
+          </div>
+
+          <!-- Informasi Jumlah Koleksi Buku (Statistik Live di Banner) -->
+          <div class="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-6 border-t border-white/10">
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-3.5 border border-white/10">
+              <p class="text-xs text-slate-300">Judul Koleksi</p>
+              <p id="stat-hero-judul" class="text-2xl font-extrabold text-white mt-0.5">12</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-3.5 border border-white/10">
+              <p class="text-xs text-slate-300">Total Eksemplar</p>
+              <p id="stat-hero-eksemplar" class="text-2xl font-extrabold text-blue-300 mt-0.5">81</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-3.5 border border-white/10">
+              <p class="text-xs text-slate-300">Stok Tersedia</p>
+              <p id="stat-hero-tersedia" class="text-2xl font-extrabold text-emerald-300 mt-0.5">77</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur rounded-2xl p-3.5 border border-white/10">
+              <p class="text-xs text-slate-300">Anggota Aktif</p>
+              <p id="stat-hero-anggota" class="text-2xl font-extrabold text-amber-300 mt-0.5">5</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Buku Populer (Recommended / Paling Sering Dipinjam) -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="text-lg sm:text-xl font-extrabold text-navy-900">Buku Populer & Rekomendasi</h2>
+              <p class="text-xs sm:text-sm text-slate-500">Koleksi dengan frekuensi peminjaman dan rating tertinggi</p>
+            </div>
+            <button data-nav="katalog" class="px-3.5 py-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold transition">
+              Lihat Semua →
+            </button>
+          </div>
+          <div id="home-popular-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+            <!-- Diisi otomatis dari database MySQL -->
+          </div>
+        </div>
+
+        <!-- Section: Buku Terbaru & Filter Kategori Cepat (Gaya BookBase Categories) -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-lg sm:text-xl font-extrabold text-navy-900">Koleksi Buku Terbaru</h2>
+              <p class="text-xs sm:text-sm text-slate-500">Klik sampul buku untuk melihat detail di panel kanan atau langsung meminjam</p>
+            </div>
+            <button data-nav="katalog" class="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition">
+              Buka Katalog Lengkap
+            </button>
+          </div>
+
+          <!-- Pill Kategori BookBase -->
+          <div id="home-category-pills" class="flex items-center gap-2 overflow-x-auto pb-3 mb-4">
+            <!-- Diisi otomatis dari tabel kategori -->
+          </div>
+
+          <div id="home-newest-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+            <!-- Diisi otomatis dari database MySQL -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 2: KATALOG BUKU LENGKAP (Search, Filter Kategori & Tahun Terbit)
+           ================================================================== -->
+      <section id="view-katalog" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-navy-900">Katalog Koleksi Buku</h1>
+              <p class="text-sm text-slate-500">Temukan buku berdasarkan judul, penulis, kategori, dan tahun terbit</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="catalog-count-badge" class="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold">
+                Menampilkan 12 Buku
+              </span>
+            </div>
+          </div>
+
+          <!-- Bar Pencarian & Filter Katalog -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="sm:col-span-2 relative">
+              <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+              </svg>
+              <input
+                id="catalog-search"
+                type="search"
+                placeholder="Cari judul buku, nama penulis, atau ISBN..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <select id="catalog-filter-category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:border-blue-500 focus:outline-none">
+                <option value="all">Semua Kategori</option>
+              </select>
+            </div>
+            <div>
+              <select id="catalog-filter-year" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:border-blue-500 focus:outline-none">
+                <option value="all">Semua Tahun Terbit</option>
+              </select>
+            </div>
+            <div>
+              <select id="catalog-filter-sort" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:border-blue-500 focus:outline-none">
+                <option value="terbaru">Urutkan: Terbaru</option>
+                <option value="populer">Urutkan: Terpopuler</option>
+                <option value="judul">Urutkan: Judul (A-Z)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Grid Daftar Buku Katalog -->
+          <div id="catalog-books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pt-2">
+            <!-- Diisi secara dinamis -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 3: TENTANG PERPUSTAKAAN
+           ================================================================== -->
+      <section id="view-tentang" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80 space-y-6">
+          <div class="max-w-3xl space-y-3">
+            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider">Profil Institusi</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-navy-900">Tentang BookBase Digital Library</h1>
+            <p class="text-slate-600 leading-relaxed">
+              <strong>BookBase Digital Library</strong> adalah Sistem Informasi Perpustakaan modern yang mengintegrasikan katalog koleksi fisik, sirkulasi peminjaman buku, manajemen anggota, perhitungan denda keterlambatan otomatis, serta pelaporan eksekutif berbasis database MySQL.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-navy-900 text-white flex items-center justify-center font-bold">01</div>
+              <h3 class="font-bold text-navy-900">Katalog Terbuka & Cepat</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Pencarian instan berdasarkan judul, penulis, ISBN, filter kategori, serta tahun terbit dengan status stok waktu nyata.
+              </p>
+            </div>
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">02</div>
+              <h3 class="font-bold text-navy-900">Sirkulasi & Denda Otomatis</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Stok buku otomatis berkurang ketika peminjaman disetujui Admin dan kembali bertambah saat buku dikembalikan beserta kalkulasi denda keterlambatan (Rp 2.000/hari).
+              </p>
+            </div>
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">03</div>
+              <h3 class="font-bold text-navy-900">Keamanan & Hak Akses</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Dilengkapi proteksi CSRF token, prepared statements anti-SQL Injection, password hashing scrypt, serta pemisahan hak akses Admin dan Anggota.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-navy-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h4 class="font-bold text-base">Jam Layanan Sirkulasi Perpustakaan</h4>
+              <p class="text-xs text-slate-300 mt-1">Senin – Jumat: 08.00 – 20.00 WIB | Sabtu: 09.00 – 16.00 WIB | Peminjaman Online 24 Jam</p>
+            </div>
+            <button data-nav="katalog" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition">
+              Mulai Jelajahi Katalog
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 4: HALAMAN LOGIN, REGISTRASI ANGGOTA & LUPA PASSWORD
+           ================================================================== -->
+      <section id="view-login" class="view-section hidden">
+        <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-5">
+          <!-- Panel Informasi Kiri -->
+          <div class="lg:col-span-2 hero-navy-gradient p-8 text-white flex flex-col justify-between">
+            <div class="space-y-4">
+              <span class="px-3 py-1 rounded-full bg-white/10 text-blue-200 text-xs font-bold">Portal Akses</span>
+              <h2 class="text-2xl font-extrabold leading-snug">Selamat Datang di BookBase Library</h2>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Masuk menggunakan akun Administrator untuk mengelola seluruh data perpustakaan, atau akun Anggota untuk meminjam buku dan memantau riwayat peminjaman.
+              </p>
+            </div>
+
+            <!-- Tombol Isi Otomatis Akun Demo Pengujian -->
+            <div class="space-y-2.5 pt-6 border-t border-white/15">
+              <p class="text-xs font-bold text-blue-200 uppercase tracking-wider">Akun Pengujian Cepat (Klik):</p>
+              <button
+                type="button"
+                id="btn-fill-admin"
+                class="w-full text-left p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition"
+              >
+                <p class="text-xs font-bold text-white">1. Akun Administrator</p>
+                <p class="text-[11px] text-slate-300">admin@perpustakaan.id | Pass: admin123</p>
+              </button>
+              <button
+                type="button"
+                id="btn-fill-member"
+                class="w-full text-left p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition"
+              >
+                <p class="text-xs font-bold text-white">2. Akun Anggota</p>
+                <p class="text-[11px] text-slate-300">anggota@perpustakaan.id | Pass: anggota123</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Form Kanan -->
+          <div class="lg:col-span-3 p-6 sm:p-8">
+            <!-- Tab Switcher: Login | Registrasi | Lupa Password -->
+            <div class="flex border-b border-slate-200 mb-6 gap-2">
+              <button type="button" data-auth-tab="login" class="auth-tab-btn pb-3 px-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600">
+                Login
+              </button>
+              <button type="button" data-auth-tab="register" class="auth-tab-btn pb-3 px-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                Registrasi Anggota
+              </button>
+              <button type="button" data-auth-tab="forgot" class="auth-tab-btn pb-3 px-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                Lupa Password
+              </button>
+            </div>
+
+            <!-- FORM 1: LOGIN -->
+            <form id="form-login" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Email</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  required
+                  placeholder="nama@perpustakaan.id"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  required
+                  placeholder="Masukkan password"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                class="w-full py-3 rounded-xl bg-navy-900 hover:bg-blue-600 text-white font-bold text-sm shadow transition"
+              >
+                Masuk ke Sistem
+              </button>
+            </form>
+
+            <!-- FORM 2: REGISTRASI ANGGOTA -->
+            <form id="form-register" class="hidden space-y-3.5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
+                  <input id="reg-nama" type="text" required placeholder="Nama lengkap Anda" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">NIS / NIM</label>
+                  <input id="reg-nis" type="text" required placeholder="Contoh: 2026101099" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Email Aktif</label>
+                  <input id="reg-email" type="email" required placeholder="email@kampus.ac.id" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Telepon / WA</label>
+                  <input id="reg-telepon" type="text" required placeholder="0812xxxxxxxx" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap</label>
+                <input id="reg-alamat" type="text" required placeholder="Jalan, Kota/Kabupaten" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Buat Password (Min. 6 karakter)</label>
+                <input id="reg-password" type="password" required minlength="6" placeholder="Minimal 6 karakter" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+              </div>
+              <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow transition">
+                Daftar Sebagai Anggota
+              </button>
+            </form>
+
+            <!-- FORM 3: LUPA PASSWORD -->
+            <form id="form-forgot" class="hidden space-y-4">
+              <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                Masukkan alamat email terdaftar dan NIS/NIM Anda (untuk Anggota) guna mengatur ulang password secara aman.
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Email Terdaftar</label>
+                <input id="forgot-email" type="email" required placeholder="Masukkan email akun" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">NIS / NIM (Verifikasi Anggota)</label>
+                <input id="forgot-nis" type="text" placeholder="Contoh: 2026101001 (Kosongkan jika Admin)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Password Baru</label>
+                <input id="forgot-new-password" type="password" required minlength="6" placeholder="Masukkan password baru (min. 6 karakter)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none" />
+              </div>
+              <button type="submit" class="w-full py-3 rounded-xl bg-navy-900 hover:bg-blue-600 text-white font-bold text-sm shadow transition">
+                Simpan Password Baru
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 5: RIWAYAT PEMINJAMAN ANGGOTA (Khusus Anggota / User Login)
+           ================================================================== -->
+      <section id="view-riwayat-anggota" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-navy-900">Riwayat & Status Peminjaman Saya</h1>
+              <p class="text-sm text-slate-500">Pantau status pengajuan pinjam, batas waktu pengembalian, dan informasi denda</p>
+            </div>
+            <button data-nav="katalog" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition">
+              + Pinjam Buku Lainnya
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th class="py-3.5 px-4">Kode Transaksi</th>
+                  <th class="py-3.5 px-4">Buku yang Dipinjam</th>
+                  <th class="py-3.5 px-4">Tgl Pinjam</th>
+                  <th class="py-3.5 px-4">Batas Kembali</th>
+                  <th class="py-3.5 px-4">Status</th>
+                  <th class="py-3.5 px-4">Denda</th>
+                </tr>
+              </thead>
+              <tbody id="member-loans-tbody" class="divide-y divide-slate-100 text-sm">
+                <!-- Diisi dari /api/loans -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 6: DASHBOARD ADMIN (KPI, Grafik Statistik, Buku Dipinjam, Aktivitas Terbaru)
+           ================================================================== -->
+      <section id="view-admin-dashboard" class="view-section hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Panel Eksekutif</span>
+            <h1 class="text-2xl font-extrabold text-navy-900 mt-1">Dashboard Administrator</h1>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button data-nav="admin-buku" class="px-4 py-2 rounded-xl bg-navy-900 text-white text-xs font-bold hover:bg-blue-600 transition">
+              + Kelola Buku
+            </button>
+            <button data-nav="admin-transaksi" class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition">
+              Kelola Sirkulasi
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Kartu Ringkasan Utama Dashboard Admin -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500">Total Buku</p>
+            <p id="adm-stat-buku" class="text-2xl font-extrabold text-navy-900 mt-1">0</p>
+            <p id="adm-stat-stok-sub" class="text-[11px] text-slate-400 mt-1">0 eksemplar tersedia</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500">Total Anggota</p>
+            <p id="adm-stat-anggota" class="text-2xl font-extrabold text-blue-600 mt-1">0</p>
+            <p class="text-[11px] text-slate-400 mt-1">Anggota terdaftar aktif</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500">Total Peminjaman</p>
+            <p id="adm-stat-peminjaman" class="text-2xl font-extrabold text-indigo-600 mt-1">0</p>
+            <p class="text-[11px] text-slate-400 mt-1">Seluruh transaksi</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500">Total Pengembalian</p>
+            <p id="adm-stat-pengembalian" class="text-2xl font-extrabold text-emerald-600 mt-1">0</p>
+            <p class="text-[11px] text-slate-400 mt-1">Transaksi selesai</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm col-span-2 sm:col-span-1">
+            <p class="text-xs font-semibold text-slate-500">Sedang Dipinjam</p>
+            <p id="adm-stat-dipinjam" class="text-2xl font-extrabold text-amber-600 mt-1">0</p>
+            <p id="adm-stat-pending-sub" class="text-[11px] text-rose-500 font-semibold mt-1">0 menunggu persetujuan</p>
+          </div>
+        </div>
+
+        <!-- Grafik Statistik Peminjaman & Status Transaksi -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-extrabold text-navy-900">Grafik Statistik Peminjaman per Kategori</h3>
+                <p class="text-xs text-slate-500">Distribusi minat baca dan sirkulasi koleksi buku</p>
+              </div>
+            </div>
+            <div class="h-64">
+              <canvas id="chart-loans-category"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+            <div class="mb-4">
+              <h3 class="font-extrabold text-navy-900">Komposisi Status Transaksi</h3>
+              <p class="text-xs text-slate-500">Proporsi status sirkulasi saat ini</p>
+            </div>
+            <div class="h-64 flex items-center justify-center">
+              <canvas id="chart-loans-status"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daftar Buku yang Sedang Dipinjam & Aktivitas Terbaru -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <!-- Tabel Buku yang Sedang Dipinjam -->
+          <div class="xl:col-span-2 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-extrabold text-navy-900">Buku yang Sedang Dipinjam & Pengajuan Baru</h3>
+                <p class="text-xs text-slate-500">Daftar sirkulasi aktif yang memerlukan perhatian Admin</p>
+              </div>
+              <button data-nav="admin-transaksi" class="text-xs font-bold text-blue-600 hover:underline">
+                Kelola Semua →
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <th class="py-3 px-3">Kode</th>
+                    <th class="py-3 px-3">Judul Buku</th>
+                    <th class="py-3 px-3">Peminjam</th>
+                    <th class="py-3 px-3">Jatuh Tempo</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-3 text-right">Aksi Cepat</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-active-loans-tbody" class="divide-y divide-slate-100 text-xs">
+                  <!-- Diisi otomatis -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Log Aktivitas Terbaru -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+            <div>
+              <h3 class="font-extrabold text-navy-900">Aktivitas Terbaru</h3>
+              <p class="text-xs text-slate-500">Log audit langsung dari tabel <code class="text-blue-600">aktivitas</code></p>
+            </div>
+            <div id="adm-activity-list" class="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+              <!-- Diisi otomatis -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 7: MANAJEMEN DATA BUKU (CRUD Lengkap + Upload Cover + Stok)
+           ================================================================== -->
+      <section id="view-admin-buku" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-navy-900">Manajemen Data Buku</h1>
+              <p class="text-sm text-slate-500">Tambah, edit, hapus, unggah cover buku, dan kelola stok koleksi</p>
+            </div>
+            <button
+              id="btn-open-add-book"
+              class="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-blue-600 text-white text-xs font-bold shadow transition flex items-center gap-2 self-start sm:self-auto"
+            >
+              <span>+ Tambah Buku Baru</span>
+            </button>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input
+              id="adm-book-search"
+              type="search"
+              placeholder="Cari kode buku, ISBN, judul, atau penulis..."
+              class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none"
+            />
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th class="py-3.5 px-3">Cover</th>
+                  <th class="py-3.5 px-3">ID / ISBN</th>
+                  <th class="py-3.5 px-3">Judul & Penulis</th>
+                  <th class="py-3.5 px-3">Penerbit / Tahun</th>
+                  <th class="py-3.5 px-3">Kategori & Rak</th>
+                  <th class="py-3.5 px-3">Stok</th>
+                  <th class="py-3.5 px-3 text-right">Aksi CRUD</th>
+                </tr>
+              </thead>
+              <tbody id="adm-books-tbody" class="divide-y divide-slate-100 text-xs">
+                <!-- Diisi dari database -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 8: MANAJEMEN DATA ANGGOTA (CRUD Lengkap)
+           ================================================================== -->
+      <section id="view-admin-anggota" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-navy-900">Manajemen Data Anggota</h1>
+              <p class="text-sm text-slate-500">Kelola data anggota perpustakaan (Tambah, Edit, Hapus, dan Lihat Daftar)</p>
+            </div>
+            <button
+              id="btn-open-add-member"
+              class="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-blue-600 text-white text-xs font-bold shadow transition self-start sm:self-auto"
+            >
+              + Tambah Anggota Baru
+            </button>
+          </div>
+
+          <div>
+            <input
+              id="adm-member-search"
+              type="search"
+              placeholder="Cari nama anggota, NIS/NIM, kode anggota, atau email..."
+              class="w-full max-w-md px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:outline-none"
+            />
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th class="py-3.5 px-3">ID Anggota</th>
+                  <th class="py-3.5 px-3">Nama Lengkap</th>
+                  <th class="py-3.5 px-3">NIS / NIM</th>
+                  <th class="py-3.5 px-3">Email & Telepon</th>
+                  <th class="py-3.5 px-3">Alamat</th>
+                  <th class="py-3.5 px-3">Tgl Daftar</th>
+                  <th class="py-3.5 px-3 text-right">Aksi CRUD</th>
+                </tr>
+              </thead>
+              <tbody id="adm-members-tbody" class="divide-y divide-slate-100 text-xs">
+                <!-- Diisi dari database -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 9: SISTEM PEMINJAMAN, PENGEMBALIAN & DENDA OTOMATIS
+           ================================================================== -->
+      <section id="view-admin-transaksi" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-navy-900">Transaksi Peminjaman & Pengembalian</h1>
+              <p class="text-sm text-slate-500">
+                Setujui atau tolak pengajuan, proses pengembalian buku, dan pantau perhitungan denda otomatis (Rp 2.000/hari)
+              </p>
+            </div>
+            <button
+              id="btn-open-admin-loan"
+              class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow transition self-start sm:self-auto"
+            >
+              + Buat Transaksi Peminjaman
+            </button>
+          </div>
+
+          <!-- Filter Status Transaksi -->
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-1.5">
+              <button data-loan-filter="all" class="loan-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-900 text-white">Semua</button>
+              <button data-loan-filter="Menunggu" class="loan-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Menunggu</button>
+              <button data-loan-filter="Dipinjam" class="loan-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Dipinjam</button>
+              <button data-loan-filter="Terlambat" class="loan-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Terlambat</button>
+              <button data-loan-filter="Dikembalikan" class="loan-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Dikembalikan</button>
+              <button data-loan-filter="Ditolak" class="loan-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">Ditolak</button>
+            </div>
+            <input
+              id="adm-loan-search"
+              type="search"
+              placeholder="Cari kode transaksi, nama peminjam, atau judul..."
+              class="w-full sm:w-72 px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:border-blue-500 focus:outline-none"
+            />
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th class="py-3.5 px-3">Kode</th>
+                  <th class="py-3.5 px-3">Anggota</th>
+                  <th class="py-3.5 px-3">Buku</th>
+                  <th class="py-3.5 px-3">Pinjam & Batas</th>
+                  <th class="py-3.5 px-3">Tgl Kembali</th>
+                  <th class="py-3.5 px-3">Status</th>
+                  <th class="py-3.5 px-3">Denda</th>
+                  <th class="py-3.5 px-3 text-right">Tindakan Admin</th>
+                </tr>
+              </thead>
+              <tbody id="adm-loans-tbody" class="divide-y divide-slate-100 text-xs">
+                <!-- Diisi dari /api/loans -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           VIEW 10: PUSAT LAPORAN (Cetak, Ekspor PDF, dan Ekspor Excel)
+           ================================================================== -->
+      <section id="view-admin-laporan" class="view-section hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-6">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+            <div>
+              <h1 class="text-2xl font-extrabold text-navy-900">Pusat Laporan & Ekspor Data</h1>
+              <p class="text-sm text-slate-500">Cetak laporan resmi atau unduh dalam format PDF dan Microsoft Excel (.xlsx)</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                id="btn-export-pdf"
+                class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow transition flex items-center gap-2"
+              >
+                <span>📄 Unduh PDF</span>
+              </button>
+              <button
+                id="btn-export-excel"
+                class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow transition flex items-center gap-2"
+              >
+                <span>📊 Unduh Excel (.xlsx)</span>
+              </button>
+              <button
+                id="btn-print-report"
+                class="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-blue-600 text-white text-xs font-bold shadow transition flex items-center gap-2"
+              >
+                <span>🖨️ Cetak Laporan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pilihan 6 Jenis Laporan -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 no-print">
+            <button data-report-type="buku" class="report-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold bg-navy-900 text-white">
+              1. Data Buku
+            </button>
+            <button data-report-type="anggota" class="report-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              2. Data Anggota
+            </button>
+            <button data-report-type="peminjaman" class="report-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              3. Peminjaman
+            </button>
+            <button data-report-type="pengembalian" class="report-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              4. Pengembalian
+            </button>
+            <button data-report-type="keterlambatan" class="report-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              5. Keterlambatan
+            </button>
+            <button data-report-type="denda" class="report-tab-btn py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              6. Laporan Denda
+            </button>
+          </div>
+
+          <!-- Area Tabel Laporan yang Bisa Dicetak -->
+          <div id="printable-report-area" class="border border-slate-200 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div>
+                <h2 id="report-title-heading" class="text-lg font-extrabold text-navy-900">Laporan Data Koleksi Buku</h2>
+                <p class="text-xs text-slate-500">BookBase Digital Library — Database MySQL: db_perpustakaan</p>
+              </div>
+              <div class="text-right text-xs text-slate-500">
+                <p>Tanggal Cetak:</p>
+                <p id="report-date-label" class="font-bold text-slate-800">-</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table id="report-table" class="w-full text-left border-collapse text-xs">
+                <thead id="report-thead" class="border-b border-slate-300 bg-slate-50 text-[11px] font-bold uppercase text-slate-600"></thead>
+                <tbody id="report-tbody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 3. PANEL INSPEKTOR DETAIL BUKU KANAN (Gaya Khas BookBase Deep Navy) -->
+    <aside
+      id="book-inspector-aside"
+      class="hidden xl:flex sticky top-16 h-[calc(100vh-4rem)] w-80 bookbase-inspector text-white p-6 flex-col justify-between overflow-y-auto shrink-0"
+    >
+      <div class="space-y-5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-widest text-blue-300">Detail Buku Terpilih</span>
+          <span id="insp-rak-badge" class="px-2.5 py-0.5 rounded-full bg-white/10 text-[11px] font-semibold text-amber-300">RAK-A1</span>
+        </div>
+
+        <!-- Gambar Sampul Buku -->
+        <div class="bg-white/5 rounded-2xl p-4 flex justify-center border border-white/10">
+          <img
+            id="insp-cover"
+            src="/uploads/covers/book-1.svg"
+            alt="Cover Buku"
+            class="w-40 h-56 object-cover rounded-xl shadow-2xl"
+          />
+        </div>
+
+        <!-- Judul, Penulis & Rating -->
+        <div class="text-center space-y-1">
+          <span id="insp-category" class="inline-block px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-semibold">
+            Bisnis & Ekonomi
+          </span>
+          <h3 id="insp-title" class="text-lg font-extrabold leading-snug text-white pt-1">The Psychology of Money</h3>
+          <p id="insp-author" class="text-xs text-slate-300">Morgan Housel</p>
+          <div class="flex items-center justify-center gap-1 pt-1 text-amber-400 text-xs font-bold">
+            <span>★★★★★</span>
+            <span id="insp-rating" class="text-white ml-1">4.9</span>
+          </div>
+        </div>
+
+        <!-- Statistik 3 Kolom (Pages | Stok | Dipinjam) seperti referensi BookBase -->
+        <div class="grid grid-cols-3 divide-x divide-white/15 bg-white/5 rounded-2xl py-3 text-center border border-white/10">
+          <div>
+            <p id="insp-pages" class="text-sm font-extrabold text-white">256</p>
+            <p class="text-[10px] text-slate-400">Halaman</p>
+          </div>
+          <div>
+            <p id="insp-stock" class="text-sm font-extrabold text-emerald-400">7 / 8</p>
+            <p class="text-[10px] text-slate-400">Stok</p>
+          </div>
+          <div>
+            <p id="insp-loans" class="text-sm font-extrabold text-blue-300">42x</p>
+            <p class="text-[10px] text-slate-400">Dipinjam</p>
+          </div>
+        </div>
+
+        <!-- Metadata Ringkas -->
+        <div class="text-xs space-y-1.5 text-slate-300 bg-white/5 p-3.5 rounded-2xl border border-white/10">
+          <div class="flex justify-between">
+            <span class="text-slate-400">ISBN:</span>
+            <span id="insp-isbn" class="font-semibold text-white">978-0-85719-768-9</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Penerbit:</span>
+            <span id="insp-publisher" class="font-semibold text-white">Harriman House</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Tahun Terbit:</span>
+            <span id="insp-year" class="font-semibold text-white">2020</span>
+          </div>
+        </div>
+
+        <!-- Deskripsi Buku -->
+        <p id="insp-desc" class="text-xs text-slate-300 leading-relaxed line-clamp-5">
+          Mengungkap bagaimana perilaku dan pola pikir seseorang jauh lebih menentukan kesuksesan finansial dibandingkan sekadar rumus matematika ekonomi.
+        </p>
+      </div>
+
+      <!-- Tombol Baca Sekarang (Read Now) & Pinjam Buku di Panel Navy Kanan -->
+      <div class="pt-4 space-y-2">
+        <a
+          id="insp-btn-read"
+          href="baca.html?id=1"
+          class="w-full py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/40 transition flex items-center justify-center gap-2"
+        >
+          <span>Baca Buku Sekarang (Read Now)</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13" />
+          </svg>
+        </a>
+        <button
+          id="insp-btn-borrow"
+          class="w-full py-2.5 px-4 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition flex items-center justify-center gap-2"
+        >
+          <span>Pinjam Buku Fisik</span>
+        </button>
+        <button
+          id="insp-btn-detail-modal"
+          class="w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-semibold text-xs transition"
+        >
+          Lihat Detail Lengkap
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ====================================================================
+       FOOTER INFORMASI PERPUSTAKAAN
+       ==================================================================== -->
+  <footer class="bg-navy-950 text-slate-400 border-t border-slate-800 mt-auto no-print">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white font-extrabold flex items-center justify-center">B</div>
+        <div>
+          <p class="font-bold text-white">BookBase — Sistem Informasi Perpustakaan Digital</p>
+          <p>Jl. Pendidikan Raya No. 10, Kampus Terpadu | Email: layanan@perpustakaan.id | Telp: (021) 555-0192</p>
+        </div>
+      </div>
+      <div class="text-center sm:text-right">
+        <p>© 2026 BookBase Library System. Terhubung dengan Database MySQL (<code class="text-blue-400">db_perpustakaan</code>).</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ====================================================================
+       MODAL 1: DETAIL BUKU & FORM PENGAJUAN PEMINJAMAN
+       ==================================================================== -->
+  <div id="modal-book-detail" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fadeIn">
+      <div class="flex items-center justify-between px-6 py-4 bg-navy-900 text-white">
+        <h3 id="md-book-header" class="font-extrabold text-base">Detail Koleksi & Peminjaman Buku</h3>
+        <button type="button" data-close-modal="modal-book-detail" class="text-slate-300 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+      <div class="p-6 space-y-5 max-h-[82vh] overflow-y-auto">
+        <div class="flex flex-col sm:flex-row gap-5">
+          <img id="md-book-cover" src="/uploads/covers/book-1.svg" alt="Cover" class="w-36 h-52 object-cover rounded-2xl shadow-md mx-auto sm:mx-0 shrink-0" />
+          <div class="space-y-2 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="md-book-category" class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">Kategori</span>
+              <span id="md-book-rak" class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">RAK-A1</span>
+              <span id="md-book-stock-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Tersedia</span>
+            </div>
+            <h2 id="md-book-title" class="text-xl font-extrabold text-navy-900">Judul Buku</h2>
+            <p id="md-book-author" class="text-sm font-semibold text-slate-600">Penulis</p>
+            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+              <p><strong>Kode Buku:</strong> <span id="md-book-code">-</span></p>
+              <p><strong>ISBN:</strong> <span id="md-book-isbn">-</span></p>
+              <p><strong>Penerbit:</strong> <span id="md-book-publisher">-</span></p>
+              <p><strong>Tahun Terbit:</strong> <span id="md-book-year">-</span></p>
+            </div>
+            <p id="md-book-desc" class="text-xs text-slate-600 leading-relaxed pt-2 border-t border-slate-100"></p>
+          </div>
+        </div>
+
+        <!-- Form Pengajuan Pinjam Buku -->
+        <form id="form-borrow-book" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+          <input type="hidden" id="borrow-book-id" />
+          <h4 class="font-extrabold text-sm text-navy-900">Formulir Pengajuan Peminjaman Buku</h4>
+          <div id="borrow-admin-member-wrap" class="hidden">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Anggota Peminjam (Mode Admin)</label>
+            <select id="borrow-member-select" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs bg-white"></select>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Durasi Peminjaman</label>
+              <select id="borrow-duration" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs bg-white">
+                <option value="7">7 Hari (Standar)</option>
+                <option value="14">14 Hari (2 Minggu)</option>
+                <option value="3">3 Hari (Baca Cepat)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Peminjaman</label>
+              <input id="borrow-notes" type="text" placeholder="Contoh: Referensi kuliah / tugas akhir" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs bg-white" />
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <a
+              id="md-btn-read-now"
+              href="baca.html?id=1"
+              class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow flex items-center gap-1.5"
+            >
+              <span>📖 Baca Buku Online Sekarang</span>
+            </a>
+            <div class="flex items-center gap-2">
+              <button type="button" data-close-modal="modal-book-detail" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold">
+                Tutup
+              </button>
+              <button id="btn-submit-borrow" type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow">
+                Ajukan Peminjaman Fisik
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 2: TAMBAH / EDIT DATA BUKU (Admin CRUD + Upload Cover)
+       ==================================================================== -->
+  <div id="modal-crud-book" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 bg-navy-900 text-white">
+        <h3 id="modal-book-form-title" class="font-extrabold text-base">Tambah Data Buku Baru</h3>
+        <button type="button" data-close-modal="modal-crud-book" class="text-slate-300 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+      <form id="form-crud-book" class="p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+        <input type="hidden" id="book-form-id" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Judul Buku *</label>
+            <input id="bf-judul" type="text" required placeholder="Judul lengkap buku" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ISBN *</label>
+            <input id="bf-isbn" type="text" required placeholder="978-xxx-xxx-xxx-x" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Penulis *</label>
+            <input id="bf-penulis" type="text" required placeholder="Nama penulis" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Penerbit *</label>
+            <input id="bf-penerbit" type="text" required placeholder="Nama penerbit" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Terbit *</label>
+            <input id="bf-tahun" type="number" required min="1900" max="2035" value="2024" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Buku *</label>
+            <select id="bf-kategori" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Lokasi Rak *</label>
+            <input id="bf-rak" type="text" required placeholder="Contoh: RAK-A1" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Jumlah Stok *</label>
+              <input id="bf-stok" type="number" required min="0" value="5" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Halaman</label>
+              <input id="bf-halaman" type="number" min="1" value="250" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Unggah Cover Buku (Gambar PNG/JPG/SVG)</label>
+          <input id="bf-cover-file" type="file" accept="image/*" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Buku *</label>
+          <textarea id="bf-deskripsi" rows="3" required placeholder="Ringkasan isi buku..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" data-close-modal="modal-crud-book" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-navy-900 hover:bg-blue-600 text-white text-xs font-bold shadow">
+            Simpan Data Buku
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 3: TAMBAH / EDIT DATA ANGGOTA (Admin CRUD)
+       ==================================================================== -->
+  <div id="modal-crud-member" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 bg-navy-900 text-white">
+        <h3 id="modal-member-form-title" class="font-extrabold text-base">Tambah Data Anggota</h3>
+        <button type="button" data-close-modal="modal-crud-member" class="text-slate-300 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+      <form id="form-crud-member" class="p-6 space-y-3.5">
+        <input type="hidden" id="member-form-id" />
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap *</label>
+          <input id="mf-nama" type="text" required placeholder="Nama lengkap anggota" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">NIS / NIM *</label>
+            <input id="mf-nis" type="text" required placeholder="Nomor Induk Siswa/Mahasiswa" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Telepon *</label>
+            <input id="mf-telepon" type="text" required placeholder="0812xxxxxxxx" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+            <input id="mf-email" type="email" required placeholder="email@kampus.ac.id" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Pendaftaran *</label>
+            <input id="mf-tanggal" type="date" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap *</label>
+          <textarea id="mf-alamat" rows="2" required placeholder="Alamat lengkap anggota" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password Akun (Opsional, default: anggota123)</label>
+          <input id="mf-password" type="password" placeholder="Isi untuk mengatur/mengubah password" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" data-close-modal="modal-crud-member" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-navy-900 hover:bg-blue-600 text-white text-xs font-bold shadow">
+            Simpan Anggota
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 4: PROSES PENGEMBALIAN BUKU & KALKULASI DENDA OTOMATIS
+       ==================================================================== -->
+  <div id="modal-return-loan" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 bg-navy-900 text-white">
+        <h3 class="font-extrabold text-base">Proses Pengembalian Buku</h3>
+        <button type="button" data-close-modal="modal-return-loan" class="text-slate-300 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+      <form id="form-return-loan" class="p-6 space-y-4">
+        <input type="hidden" id="return-loan-id" />
+        <input type="hidden" id="return-due-date" />
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+          <p><strong>Kode Transaksi:</strong> <span id="ret-info-kode" class="text-blue-600 font-bold">-</span></p>
+          <p><strong>Judul Buku:</strong> <span id="ret-info-judul">-</span></p>
+          <p><strong>Peminjam:</strong> <span id="ret-info-anggota">-</span></p>
+          <p><strong>Batas Pengembalian:</strong> <span id="ret-info-batas" class="font-bold">-</span></p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Dikembalikan *</label>
+          <input id="ret-tanggal-kembali" type="date" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs" />
+        </div>
+
+        <!-- Kalkulasi Denda Otomatis -->
+        <div id="ret-fine-box" class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs space-y-1">
+          <p class="font-bold text-emerald-800" id="ret-fine-summary">Tepat Waktu — Denda Rp 0</p>
+          <p class="text-[11px] text-emerald-700">Tarif keterlambatan: Rp 2.000 / hari</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Kondisi Buku Saat Dikembalikan</label>
+          <select id="ret-kondisi" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs bg-white">
+            <option value="Baik">Baik & Lengkap</option>
+            <option value="Rusak Ringan">Rusak Ringan / Sampul Lecet</option>
+            <option value="Rusak Berat">Rusak Berat</option>
+          </select>
+        </div>
+
+        <label class="flex items-center gap-2 text-xs font-semibold text-slate-700">
+          <input id="ret-bayar-lunas" type="checkbox" checked class="rounded text-blue-600" />
+          <span>Tandai denda langsung dibayar Lunas (jika ada denda)</span>
+        </label>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" data-close-modal="modal-return-loan" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow">
+            Konfirmasi Pengembalian
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Main Frontend Application Script (Lengkap dengan GitHub Pages Snapshot Adapter) -->
+  <script src="js/data/db-snapshot.js"></script>
+  <script src="js/gh-pages-adapter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
