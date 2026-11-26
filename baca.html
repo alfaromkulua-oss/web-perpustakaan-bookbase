@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Reader Buku Digital Lengkap — BookBase Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              50: '#eef2ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              800: '#0f2557',
+              900: '#071330',
+              950: '#040b1d',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+    .reader-serif {
+      font-family: 'Lora', Georgia, serif;
+    }
+    /* Tema Kertas */
+    body[data-theme="cream"] {
+      background-color: #f4efe4;
+      color: #1f2421;
+    }
+    body[data-theme="cream"] .reader-card {
+      background-color: #fcf9f2;
+      border-color: #e5dcc8;
+    }
+    body[data-theme="light"] {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    body[data-theme="light"] .reader-card {
+      background-color: #ffffff;
+      border-color: #e2e8f0;
+    }
+    body[data-theme="night"] {
+      background-color: #050b1a;
+      color: #e2e8f0;
+    }
+    body[data-theme="night"] .reader-card {
+      background-color: #091530;
+      border-color: #1e293b;
+    }
+    body[data-theme="night"] blockquote {
+      background-color: rgba(37, 99, 235, 0.14);
+      color: #93c5fd;
+    }
+
+    /* Ukuran Huruf */
+    .reader-prose[data-size="s"] { font-size: 0.98rem; line-height: 1.85; }
+    .reader-prose[data-size="m"] { font-size: 1.12rem; line-height: 1.92; }
+    .reader-prose[data-size="l"] { font-size: 1.28rem; line-height: 1.98; }
+
+    .reader-prose p {
+      margin-bottom: 1.3em;
+      text-align: justify;
+    }
+    .reader-prose p.dropcap::first-letter {
+      float: left;
+      font-size: 3.1em;
+      line-height: 0.85;
+      padding-right: 0.12em;
+      padding-top: 0.04em;
+      font-weight: 700;
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body data-theme="cream" class="min-h-screen flex flex-col antialiased">
+
+  <!-- ====================================================================
+       TOP BAR E-READER (Navy BookBase Header)
+       ==================================================================== -->
+  <header class="sticky top-0 z-30 bg-navy-900 text-white shadow-md border-b border-white/10">
+    <div class="max-w-[1550px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Kembali & Informasi Buku -->
+      <div class="flex items-center gap-3 min-w-0">
+        <a
+          href="index.html"
+          class="p-2 rounded-xl bg-white/10 hover:bg-blue-600 text-white transition shrink-0 flex items-center gap-1.5 text-xs font-bold px-3"
+          title="Kembali ke Katalog Perpustakaan"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span class="hidden sm:inline">Katalog</span>
+        </a>
+        <div class="min-w-0">
+          <h1 id="reader-book-title" class="text-sm sm:text-base font-extrabold truncate text-white">Memuat Buku...</h1>
+          <p id="reader-book-meta" class="text-[11px] text-blue-300 truncate">BookBase Full E-Reader</p>
+        </div>
+      </div>
+
+      <!-- Kontrol Mode Baca (Per Halaman / Per Bab / Full 1 Buku), Lompat Halaman, Tema, Ukuran Font -->
+      <div class="flex items-center gap-2 flex-wrap justify-end">
+        <!-- Mode Baca: Per Halaman | Per Bab | Full Seluruh Buku -->
+        <div class="hidden lg:flex items-center bg-white/10 rounded-xl p-1 gap-1">
+          <button type="button" data-read-mode="page" class="mode-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">
+            Per Halaman
+          </button>
+          <button type="button" data-read-mode="chapter" class="mode-btn px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">
+            Per Bab
+          </button>
+          <button type="button" data-read-mode="all" class="mode-btn px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">
+            Full 1 Buku
+          </button>
+        </div>
+
+        <!-- Lompat Cepat ke Halaman (Go to Page) -->
+        <form id="form-jump-page" class="hidden sm:flex items-center gap-1 bg-white/10 rounded-xl px-2.5 py-1">
+          <span class="text-[11px] text-slate-300 font-semibold">Hlm:</span>
+          <input
+            id="input-jump-page"
+            type="number"
+            min="1"
+            value="1"
+            class="w-12 bg-navy-950/80 text-white text-xs font-bold text-center rounded-lg py-0.5 border border-white/15 focus:outline-none focus:border-blue-400"
+          />
+          <span id="label-total-pages" class="text-[11px] text-blue-300 font-bold">/ 40</span>
+        </form>
+
+        <!-- Pilihan Tema Kertas -->
+        <div class="hidden md:flex items-center bg-white/10 rounded-xl p-1 gap-1">
+          <button type="button" data-set-theme="cream" class="theme-btn px-2 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">
+            Krem
+          </button>
+          <button type="button" data-set-theme="light" class="theme-btn px-2 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">
+            Putih
+          </button>
+          <button type="button" data-set-theme="night" class="theme-btn px-2 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">
+            Malam
+          </button>
+        </div>
+
+        <!-- Ukuran Huruf -->
+        <div class="flex items-center bg-white/10 rounded-xl p-1 gap-1">
+          <button type="button" data-set-size="s" class="size-btn px-2 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white" title="Huruf Kecil">
+            A-
+          </button>
+          <button type="button" data-set-size="m" class="size-btn px-2 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white" title="Huruf Sedang">
+            A
+          </button>
+          <button type="button" data-set-size="l" class="size-btn px-2 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white" title="Huruf Besar">
+            A+
+          </button>
+        </div>
+
+        <!-- Tombol Daftar Isi & Halaman -->
+        <button
+          type="button"
+          id="btn-toggle-toc"
+          class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
+          <span class="hidden sm:inline">Daftar Isi & Halaman</span>
+        </button>
+
+        <!-- Tombol Fullscreen -->
+        <button
+          type="button"
+          id="btn-fullscreen"
+          class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition"
+          title="Layar Penuh"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bar Progres Baca Keseluruhan -->
+    <div class="w-full h-1.5 bg-white/10">
+      <div id="reader-progress-bar" class="h-full bg-blue-500 transition-all duration-300" style="width: 5%"></div>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       LAYOUT UTAMA E-READER (Sidebar Daftar Isi + Area Kertas Buku)
+       ==================================================================== -->
+  <div class="flex-1 max-w-[1550px] w-full mx-auto flex relative">
+
+    <!-- SIDEBAR DAFTAR ISI 10 BAB & DAFTAR SEMUA HALAMAN -->
+    <aside
+      id="reader-toc-sidebar"
+      class="w-80 shrink-0 p-4 sm:p-5 hidden lg:block space-y-4"
+    >
+      <div class="reader-card rounded-3xl p-5 border shadow-sm space-y-4 sticky top-20 max-h-[calc(100vh-6rem)] flex flex-col">
+        <!-- Info Ringkas Buku -->
+        <div class="flex items-center gap-3 pb-3.5 border-b border-slate-300/60 shrink-0">
+          <img
+            id="toc-book-cover"
+            src="/uploads/covers/book-1.svg"
+            alt="Cover"
+            class="w-14 h-20 object-cover rounded-xl shadow"
+          />
+          <div class="min-w-0">
+            <span id="toc-book-category" class="px-2 py-0.5 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-bold">
+              Kategori
+            </span>
+            <h2 id="toc-book-title" class="font-extrabold text-sm mt-1 line-clamp-2">Judul Buku</h2>
+            <p id="toc-book-author" class="text-xs opacity-70 truncate">Penulis</p>
+            <p id="toc-book-stats" class="text-[11px] font-bold text-blue-600 mt-0.5">10 Bab • 40 Halaman</p>
+          </div>
+        </div>
+
+        <!-- Pilihan Mode Baca di Mobile / Sidebar -->
+        <div class="shrink-0 space-y-1.5">
+          <p class="text-[10px] font-extrabold uppercase tracking-wider opacity-60">Mode Tampilan Baca</p>
+          <div class="grid grid-cols-3 gap-1 bg-slate-500/10 p-1 rounded-xl">
+            <button type="button" data-read-mode="page" class="mode-btn-side py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 text-white">
+              Per Halaman
+            </button>
+            <button type="button" data-read-mode="chapter" class="mode-btn-side py-1.5 rounded-lg text-[11px] font-bold opacity-75">
+              Per Bab
+            </button>
+            <button type="button" data-read-mode="all" class="mode-btn-side py-1.5 rounded-lg text-[11px] font-bold opacity-75">
+              Full 1 Buku
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid Nomor Halaman Cepat (1 s/d N) -->
+        <div class="shrink-0 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <p class="text-[10px] font-extrabold uppercase tracking-wider opacity-60">Lompat ke Nomor Halaman</p>
+            <span id="sidebar-current-page-label" class="text-[11px] font-bold text-blue-600">Hlm 1</span>
+          </div>
+          <div id="toc-pages-grid" class="grid grid-cols-7 gap-1 max-h-28 overflow-y-auto pr-1">
+            <!-- Tombol Halaman 1, 2, 3 ... N -->
+          </div>
+        </div>
+
+        <!-- Daftar Isi Seluruh Bab (10 Bab Lengkap) -->
+        <div class="flex-1 min-h-0 flex flex-col">
+          <p class="text-[10px] font-extrabold uppercase tracking-wider opacity-60 mb-2 shrink-0">Daftar Isi Lengkap (10 Bab)</p>
+          <div id="toc-chapters-list" class="space-y-1.5 overflow-y-auto pr-1 flex-1">
+            <!-- Diisi otomatis dari tabel bab_buku MySQL -->
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- AREA KERTAS BACA UTAMA -->
+    <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
+      <article class="reader-card max-w-4xl mx-auto rounded-3xl border shadow-sm p-6 sm:p-10 lg:p-14 space-y-6">
+
+        <!-- Header Halaman / Bab -->
+        <header class="border-b border-slate-300/50 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-extrabold text-blue-600 uppercase tracking-widest">
+              <span id="chapter-badge-number">BAB 1</span>
+              <span>•</span>
+              <span id="chapter-read-time">Halaman 1 dari 40</span>
+            </div>
+            <h2 id="chapter-heading-title" class="reader-serif text-xl sm:text-2xl font-bold leading-snug mt-1">
+              Memuat isi lengkap buku...
+            </h2>
+          </div>
+
+          <div class="flex items-center gap-2 self-start sm:self-center">
+            <span id="page-pill-indicator" class="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-xs font-extrabold">
+              Halaman 1 / 40
+            </span>
+          </div>
+        </header>
+
+        <!-- Isi Teks Halaman / Bab / Full Buku -->
+        <div id="chapter-body-content" data-size="m" class="reader-prose reader-serif min-h-[420px]">
+          <!-- Diisi dari tabel bab_buku -->
+        </div>
+
+        <!-- Footer Navigasi Halaman & Nomor Halaman -->
+        <footer class="pt-6 border-t border-slate-300/50 space-y-4">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <button
+              type="button"
+              id="btn-prev-page"
+              class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-500/15 hover:bg-slate-500/25 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-35 disabled:cursor-not-allowed"
+            >
+              <span>← Halaman Sebelumnya</span>
+            </button>
+
+            <div class="flex items-center gap-2">
+              <span id="chapter-footer-indicator" class="text-xs font-extrabold">
+                Halaman 1 dari 40 (Bab 1 / 10)
+              </span>
+            </div>
+
+            <button
+              type="button"
+              id="btn-next-page"
+              class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2"
+            >
+              <span>Halaman Selanjutnya →</span>
+            </button>
+          </div>
+
+          <!-- Barisan Nomor Halaman Cepat di Bawah Kertas -->
+          <div id="bottom-pagination-bar" class="flex items-center justify-center flex-wrap gap-1.5 pt-2">
+            <!-- Diisi otomatis -->
+          </div>
+        </footer>
+
+      </article>
+    </main>
+
+  </div>
+
+  <script src="js/data/db-snapshot.js"></script>
+  <script src="js/gh-pages-adapter.js"></script>
+  <script src="js/reader.js"></script>
+</body>
+</html>
