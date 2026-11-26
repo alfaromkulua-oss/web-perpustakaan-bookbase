@@ -1,0 +1,131 @@
+/* ==========================================================================
+   BookBase Digital Library — Custom Styling (Navy Blue & White Minimalist)
+   ========================================================================== */
+
+:root {
+  --navy-950: #040b1d;
+  --navy-900: #081433;
+  --navy-800: #0f2557;
+  --navy-700: #16367d;
+  --royal-600: #1d4ed8;
+  --royal-500: #2563eb;
+  --slate-bg: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--slate-bg);
+  color: #0f172a;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Book Card 3D Effect & Hover Transitions */
+.book-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 30px -10px rgba(8, 20, 51, 0.14);
+}
+
+.book-cover-shadow {
+  box-shadow: -6px 8px 18px rgba(8, 20, 51, 0.22);
+  transition: transform 0.25s ease;
+}
+
+.book-card:hover .book-cover-shadow {
+  transform: scale(1.03);
+}
+
+/* BookBase Deep Navy Right Panel */
+.bookbase-inspector {
+  background: linear-gradient(180deg, #071330 0%, #040b1d 100%);
+}
+
+/* Hero Navy Banner */
+.hero-navy-gradient {
+  background: radial-gradient(circle at 85% 20%, #1e40af 0%, #0b1b42 52%, #050d24 100%);
+}
+
+/* Pill Navigation Active State */
+.sidebar-link {
+  transition: all 0.2s ease;
+}
+
+.sidebar-link.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.sidebar-link.active .sidebar-icon {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.cat-pill {
+  transition: all 0.18s ease;
+}
+
+.cat-pill.active {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+}
+
+/* Modal Backdrop Animation */
+.modal-backdrop {
+  background-color: rgba(4, 11, 29, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+/* Print Layout for Reports */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-report-area,
+  #printable-report-area * {
+    visibility: visible;
+  }
+  #printable-report-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #ffffff !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
